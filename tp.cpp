@@ -718,6 +718,9 @@ int main (int argc, char ** argv) {
     // Utile pour la question 2 permettant d'afficher une couleur dépendant de la valence des sommets
     mesh_valence_field.clear();
 
+    for (long unsigned int i = 0; i < mesh_valence_field.size(); i++) {
+        mesh_valence_field[i] = (float)valences[i];
+    }
 
     glutMainLoop ();
     return EXIT_SUCCESS;
