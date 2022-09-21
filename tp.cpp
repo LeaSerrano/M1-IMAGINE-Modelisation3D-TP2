@@ -94,6 +94,7 @@ struct Mesh {
         computeTrianglesNormals();
         computeVerticesNormals();
     }
+
 };
 
 //Transformation made of a rotation and translation
@@ -136,10 +137,10 @@ void collect_one_ring (std::vector<Vec3> const & i_vertices,
         //Parcourir les triangles et ajouter les voisins dans le 1-voisinage
         for (int j = 0; j < 3; j++) {
             for (int k = 0; k < 3; k++) {
-            //Attention verifier que l'indice n'est pas deja present
-            if (count(o_one_ring[i_triangles[i][j]].begin(), o_one_ring[i_triangles[i][j]].end(), i_triangles[i][k]) == 0 && i_triangles[i][j] != i_triangles[i][k]) {
-                o_one_ring[i_triangles[i][j]].push_back(i_triangles[i][k]);
-            }
+                //Attention verifier que l'indice n'est pas deja present
+                if (count(o_one_ring[i_triangles[i][j]].begin(), o_one_ring[i_triangles[i][j]].end(), i_triangles[i][k]) == 0 && i_triangles[i][j] != i_triangles[i][k]) {
+                    o_one_ring[i_triangles[i][j]].push_back(i_triangles[i][k]);
+                }
             }
         }
 
@@ -160,6 +161,42 @@ void compute_vertex_valences (const std::vector<Vec3> & i_vertices,
         o_valences.push_back(o_one_ring[i].size());
     }
 }
+
+//
+float min_vertex (std::vector< Triangle > const & i_triangles) {
+    unsigned int min = i_triangles[0][0]; 
+
+    printf("%i \n", min);
+
+    for (unsigned int i = 0; i < i_triangles.size(); i++) {
+        for (int j = 0; j < 3; j++) {
+            if (i_triangles[i][j] < min) {
+                min = i_triangles[i][j];
+            }
+        }
+    }
+
+    printf("%i \n", min);
+    return (float)min;
+}
+
+float max_vertex (std::vector< Triangle > const & i_triangles) {
+    unsigned int max = i_triangles[0][0];
+
+    printf("%i \n", max);
+
+    for (unsigned int i = 0; i < i_triangles.size(); i++) {
+        for (int j = 0; j < 3; j++) {
+            if (i_triangles[i][j] > max) {
+                max = i_triangles[i][j];
+            }
+        }
+    }
+
+    printf("%i \n", max);
+    return (float)max;
+}
+//
 
 //Input mesh loaded at the launch of the application
 Mesh mesh;
@@ -716,10 +753,17 @@ int main (int argc, char ** argv) {
     // A faire : normaliser les valences pour avoir une valeur flotante entre 0. et 1. dans mesh_valence_field
     //***********************************************//
     // Utile pour la question 2 permettant d'afficher une couleur dépendant de la valence des sommets
+    
     mesh_valence_field.clear();
 
-    for (long unsigned int i = 0; i < mesh_valence_field.size(); i++) {
-        mesh_valence_field[i] = (float)valences[i];
+    float min = min_vertex(mesh.triangles);
+    float max = max_vertex(mesh.triangles);
+    printf("%f %f\n", min, max);
+
+    mesh_valence_field.resize(valences.size());
+
+    for (long unsigned int i = 0; i < valences.size(); i++) {
+        mesh_valence_field[i] = (valences[i]-min)/(max-min);
     }
 
     glutMainLoop ();
