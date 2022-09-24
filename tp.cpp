@@ -131,14 +131,14 @@ void collect_one_ring (std::vector<Vec3> const & i_vertices,
 
     //Initialiser le vecteur de o_one_ring de la taille du vecteur vertices
     o_one_ring.clear();
-    o_one_ring.resize(i_triangles.size());
+    o_one_ring.resize(i_vertices.size());
 
-    for (long unsigned int i = 0; i < i_triangles.size(); i++) {
+    for (long unsigned int i = 0; i < i_vertices.size(); i++) {
         //Parcourir les triangles et ajouter les voisins dans le 1-voisinage
         for (int j = 0; j < 3; j++) {
             for (int k = 0; k < 3; k++) {
                 //Attention verifier que l'indice n'est pas deja present
-                if (count(o_one_ring[i_triangles[i][j]].begin(), o_one_ring[i_triangles[i][j]].end(), i_triangles[i][k]) == 0 && i_triangles[i][j] != i_triangles[i][k]) {
+                if (std::find(std::begin(o_one_ring[i_triangles[i][j]]), std::end(o_one_ring[i_triangles[i][j]]), i_triangles[i][k]) == std::end(o_one_ring[i_triangles[i][j]]) && i_triangles[i][j] != i_triangles[i][k]) {
                     o_one_ring[i_triangles[i][j]].push_back(i_triangles[i][k]);
                 }
             }
@@ -162,38 +162,28 @@ void compute_vertex_valences (const std::vector<Vec3> & i_vertices,
     }
 }
 
-//
-float min_vertex (std::vector< Triangle > const & i_triangles) {
-    unsigned int min = i_triangles[0][0]; 
+// Fonctions que j'ai ajoutées
+float min_valence (std::vector<unsigned int> i_valence) {
+    unsigned int min = i_valence[0]; 
 
-    printf("%i \n", min);
-
-    for (unsigned int i = 0; i < i_triangles.size(); i++) {
-        for (int j = 0; j < 3; j++) {
-            if (i_triangles[i][j] < min) {
-                min = i_triangles[i][j];
-            }
+    for (unsigned int i = 0; i < i_valence.size(); i++) {
+        if (i_valence[i]< min) {
+            min = i_valence[i];
         }
     }
 
-    printf("%i \n", min);
     return (float)min;
 }
 
-float max_vertex (std::vector< Triangle > const & i_triangles) {
-    unsigned int max = i_triangles[0][0];
+float max_valence (std::vector<unsigned int> i_valence) {
+    unsigned int max = i_valence[0];
 
-    printf("%i \n", max);
-
-    for (unsigned int i = 0; i < i_triangles.size(); i++) {
-        for (int j = 0; j < 3; j++) {
-            if (i_triangles[i][j] > max) {
-                max = i_triangles[i][j];
-            }
+    for (unsigned int i = 0; i < i_valence.size(); i++) {
+        if (i_valence[i] > max) {
+            max = i_valence[i];
         }
     }
 
-    printf("%i \n", max);
     return (float)max;
 }
 //
@@ -756,14 +746,13 @@ int main (int argc, char ** argv) {
     
     mesh_valence_field.clear();
 
-    float min = min_vertex(mesh.triangles);
-    float max = max_vertex(mesh.triangles);
-    printf("%f %f\n", min, max);
+    float minvalence = min_valence(valences);
+    float maxvalence = max_valence(valences);
 
     mesh_valence_field.resize(valences.size());
 
     for (long unsigned int i = 0; i < valences.size(); i++) {
-        mesh_valence_field[i] = (valences[i]-min)/(max-min);
+        mesh_valence_field[i] = (valences[i]-minvalence)/(maxvalence-minvalence);
     }
 
     glutMainLoop ();
