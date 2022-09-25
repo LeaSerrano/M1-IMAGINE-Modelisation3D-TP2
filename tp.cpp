@@ -63,29 +63,90 @@ struct Mesh {
 
         //A faire : implémenter le calcul des normales par face
         //Attention commencer la fonction par triangle_normals.clear();
+        triangle_normals.clear();
+
         //Iterer sur les triangles
+        for (unsigned int i = 0; i < triangles.size(); i++) {
 
-        //La normal du triangle i est le resultat du produit vectoriel de deux ses arêtes e_10 et e_20 normalisé (e_10^e_20)
-        //L'arete e_10 est représentée par le vecteur partant du sommet 0 (triangles[i][0]) au sommet 1 (triangles[i][1])
-        //L'arete e_20 est représentée par le vecteur partant du sommet 0 (triangles[i][0]) au sommet 2 (triangles[i][2])
+            //La normale du triangle i est le resultat du produit vectoriel de deux ses arêtes e_10 et e_20 normalisé (e_10^e_20)
+            //L'arete e_10 est représentée par le vecteur partant du sommet 0 (triangles[i][0]) au sommet 1 (triangles[i][1])
+            //L'arete e_20 est représentée par le vecteur partant du sommet 0 (triangles[i][0]) au sommet 2 (triangles[i][2])
 
-        //Normaliser et ajouter dans triangle_normales
+            Vec3 s0 = vertices[triangles[i][0]];
+            Vec3 s1 = vertices[triangles[i][1]];
+            Vec3 s2 = vertices[triangles[i][2]];
+
+            Vec3 e_10 = s1 - s0;
+            Vec3 e_20 = s2 - s0;
+
+            float produitVectX = e_10[1] * e_20[2] - e_10[2] * e_20[1];
+            float produitVectY = e_10[2] * e_20[0] - e_10[0] * e_20[2];
+            float produitVectZ = e_10[0] * e_20[1] - e_10[1] * e_20[0];
+
+            //Normaliser et ajouter dans triangle_normales
+
+            float diviseur = sqrt(produitVectX*produitVectX + produitVectY*produitVectY + produitVectZ*produitVectZ);
+
+            float normeX = produitVectX/diviseur;
+            float normeY = produitVectY/diviseur;
+            float normeZ = produitVectZ/diviseur; 
+
+            Vec3 norme = Vec3 (normeX, normeY, normeZ);
+
+            triangle_normals.push_back(norme);
+
+        }
+
+        //std::cout << triangle_normals[0] << std::endl;
     }
 
     //Compute vertices normals as the average of its incident faces normals
-    void computeVerticesNormals(  ){
+    void computeVerticesNormals(){
         //Utiliser weight_type : 0 uniforme, 1 aire des triangles, 2 angle du triangle
+        int weight_type = 2;
 
         //A faire : implémenter le calcul des normales par sommet comme la moyenne des normales des triangles incidents
         //Attention commencer la fonction par normals.clear();
+        normals.clear();
+
         //Initializer le vecteur normals taille vertices.size() avec Vec3(0., 0., 0.)
+        normals.resize(vertices.size());
+
+        std::vector<int> occurence;
+        occurence.resize(vertices.size());
+
+        for (unsigned int i = 0; i < vertices.size(); i++) {
+            normals[i] = Vec3(0., 0., 0.);
+            occurence[i] = 0;
+        }
+
         //Iterer sur les triangles
 
-        //Pour chaque triangle i
-        //Ajouter la normal au triangle à celle de chacun des sommets en utilisant des poids
-        //0 uniforme, 1 aire du triangle, 2 angle du triangle
+        for (unsigned int i = 0; i < triangles.size(); i++) {
 
+            //Pour chaque triangle i
+            //Ajouter la normale au triangle à celle de chacun des sommets en utilisant des poids
+            //0 uniforme, 1 aire du triangle, 2 angle du triangle
+
+            for (unsigned int j = 0; j < 3; j++) {
+                float normalsX = triangle_normals[i][0]*weight_type;
+                float normalsY = triangle_normals[i][1]*weight_type;
+                float normalsZ = triangle_normals[i][2]*weight_type;
+
+                normals[triangles[i][j]] += Vec3(normalsX, normalsY, normalsZ);
+                occurence[triangles[i][j]] += weight_type;
+            }
+
+        }
         //Iterer sur les normales et les normaliser
+
+        for (unsigned int i = 0; i < normals.size(); i++) {
+            float normalsX = normals[i][0]/occurence[i];
+            float normalsY = normals[i][1]/occurence[i];
+            float normalsZ = normals[i][2]/occurence[i];
+
+            normals[i] = Vec3(normalsX, normalsY, normalsZ);
+        }
 
 
     }
