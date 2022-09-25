@@ -97,13 +97,13 @@ struct Mesh {
 
         }
 
-        //std::cout << triangle_normals[0] << std::endl;
     }
 
     //Compute vertices normals as the average of its incident faces normals
-    void computeVerticesNormals(){
+    void computeVerticesNormals(int weight_type){
         //Utiliser weight_type : 0 uniforme, 1 aire des triangles, 2 angle du triangle
-        int weight_type = 2;
+
+        weight_type = 2;
 
         //A faire : implémenter le calcul des normales par sommet comme la moyenne des normales des triangles incidents
         //Attention commencer la fonction par normals.clear();
@@ -115,45 +115,127 @@ struct Mesh {
         std::vector<int> occurence;
         occurence.resize(vertices.size());
 
+        std::vector<std::vector<int>> occurenceList;
+        occurenceList.resize(vertices.size());
+
+        std::vector<std::vector<int>> maxMinOccurenceList;
+        maxMinOccurenceList.resize(vertices.size());
+
         for (unsigned int i = 0; i < vertices.size(); i++) {
-            normals[i] = Vec3(0., 0., 0.);
+            //normals[i] = Vec3(0., 0., 0.);
             occurence[i] = 0;
         }
 
+        float weight = 0;
+        float P, p;
+        float x_10, y_10, z_10, x_20, y_20, z_20, x_21, y_21, z_21;
+        float a, b, c;
+
         //Iterer sur les triangles
 
-        for (unsigned int i = 0; i < triangles.size(); i++) {
+            for (unsigned int i = 0; i < triangles.size(); i++) {
 
-            //Pour chaque triangle i
-            //Ajouter la normale au triangle à celle de chacun des sommets en utilisant des poids
-            //0 uniforme, 1 aire du triangle, 2 angle du triangle
+                //Pour chaque triangle i
+                //Ajouter la normale au triangle à celle de chacun des sommets en utilisant des poids
+                //0 uniforme, 1 aire du triangle, 2 angle du triangle
 
-            for (unsigned int j = 0; j < 3; j++) {
-                float normalsX = triangle_normals[i][0]*weight_type;
-                float normalsY = triangle_normals[i][1]*weight_type;
-                float normalsZ = triangle_normals[i][2]*weight_type;
+                if (weight_type == 0) {
+                    weight = 1;
+                }
+                else if (weight_type == 1 || weight_type == 2) {
 
-                normals[triangles[i][j]] += Vec3(normalsX, normalsY, normalsZ);
-                occurence[triangles[i][j]] += weight_type;
+                    Vec3 s0 = vertices[triangles[i][0]];
+                    Vec3 s1 = vertices[triangles[i][1]];
+                    Vec3 s2 = vertices[triangles[i][2]];
+
+                    x_10 = pow((s1[0]-s0[0]), 2);
+                    y_10 = pow((s1[1]-s0[1]), 2);
+                    z_10 = pow((s1[2]-s0[2]), 2);
+
+                    x_20= pow((s0[0]-s2[0]), 2);
+                    y_20 = pow((s0[1]-s2[1]), 2);
+                    z_20 = pow((s0[2]-s2[2]), 2);
+
+                    x_21= pow((s2[0]-s1[0]), 2);
+                    y_21 = pow((s2[1]-s1[1]), 2);
+                    z_21 = pow((s2[2]-s1[2]), 2);
+
+                    float dist_10 = sqrt((x_10 + y_10 + z_10));
+                    float dist_20 = sqrt((x_20 + y_20 + z_20));
+                    float dist_21 = sqrt((x_21 + y_21 + z_21));
+
+                    if (weight_type == 1) {
+                        P = dist_10 + dist_20 + dist_21;
+                        p = P/2;
+
+                        weight = sqrt(p*(p-dist_10)*(p-dist_20)*(p-dist_21));
+                    }
+
+                    else {
+                        a = pow(dist_21, 2);
+                        b = pow(dist_10, 2);
+                        c = pow(dist_20, 2);
+
+                        if (i == triangles[i][0]) {
+                            weight = acos((b + c - a) / 2*b*c);
+                        }
+                        else if (i == triangles[i][1]) {
+                            weight = acos((a + c - b) / 2*a*c);
+                        }
+                        else {
+                            weight = acos((a + b - c) / 2*a*b); 
+                        }
+                    }
+                }
+
+                for (unsigned int j = 0; j < 3; j++) {
+                    float normalsX = triangle_normals[i][0]*weight;
+                    float normalsY = triangle_normals[i][1]*weight;
+                    float normalsZ = triangle_normals[i][2]*weight;
+
+                    normals[triangles[i][j]] += Vec3(normalsX, normalsY, normalsZ);
+                    occurence[triangles[i][j]]+= weight;
+                    occurenceList[triangles[i][j]].push_back(weight);
+                }
+
             }
+            //Iterer sur les normales et les normaliser
 
-        }
-        //Iterer sur les normales et les normaliser
+            /*float min; 
+            float max;
 
-        for (unsigned int i = 0; i < normals.size(); i++) {
-            float normalsX = normals[i][0]/occurence[i];
-            float normalsY = normals[i][1]/occurence[i];
-            float normalsZ = normals[i][2]/occurence[i];
+            for (unsigned int i = 0; i < occurenceList.size(); i++) {
+                min = occurenceList[i][0]; 
+                max = occurenceList[i][0];
 
-            normals[i] = Vec3(normalsX, normalsY, normalsZ);
-        }
+                for (unsigned int j = 0; j < occurenceList[i].size(); j++) {
 
+                    if (occurenceList[i][j]< min) {
+                        min = occurenceList[i][j];
+                    }
+                    else if (occurenceList[i][j] > max) {
+                        max = occurenceList[i][j];
+                    }
+                }
+                maxMinOccurenceList[i].push_back(min);
+                maxMinOccurenceList[i].push_back(max);
+            }*/
 
+            for (unsigned int k = 0; k < normals.size(); k++) {
+                    /*min = maxMinOccurenceList[k][0];
+                    max = maxMinOccurenceList[k][1];*/
+
+                    float normalsX = normals[k][0]/ (float)/*((occurence[k] - min)/(max - min));//*/occurence[k];
+                    float normalsY = normals[k][1]/ (float)/*((occurence[k] - min)/(max - min));//*/occurence[k];
+                    float normalsZ = normals[k][2]/ (float)/*((occurence[k] - min)/(max - min));//*/occurence[k];
+
+                    normals[k] = Vec3(normalsX, normalsY, normalsZ);
+            }
     }
 
-    void computeNormals(){
+    void computeNormals(int weight_type){
         computeTrianglesNormals();
-        computeVerticesNormals();
+        computeVerticesNormals(weight_type);
     }
 
 };
@@ -702,7 +784,7 @@ void key (unsigned char keyPressed, int x, int y) {
     case '+': //Changes weight type: 0 uniforme, 1 aire des triangles, 2 angle du triangle
         weight_type ++;
         if(weight_type == 3) weight_type = 0;
-        mesh.computeVerticesNormals(); //recalcul des normales avec le type de poids choisi
+        mesh.computeVerticesNormals(weight_type); //recalcul des normales avec le type de poids choisi
         break;
 
     default:
@@ -788,7 +870,7 @@ int main (int argc, char ** argv) {
     openOFF("data/elephant_n.off", mesh.vertices, mesh.normals, mesh.triangles, mesh.triangle_normals);
 
     //Completer les fonction de calcul de normals
-    mesh.computeNormals();
+    mesh.computeNormals(weight_type);
 
     basis = Basis();
 
