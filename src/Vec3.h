@@ -29,11 +29,13 @@ public:
     void normalize() { float L = length(); mVals[0] /= L; mVals[1] /= L; mVals[2] /= L; }
     static float dot( Vec3 const & a , Vec3 const & b ) {
        //Fonction à compléter
-        return rand(); //A remplacer par le résultat du produit scalaire
+        //return rand(); //A remplacer par le résultat du produit scalaire
+        return a[0]*b[0] + a[1]*b[1] + a[2]*b[2];
     }
     static Vec3 cross( Vec3 const & a , Vec3 const & b ) {
        //Fonction à compléter
-        return Vec3(); //A remplacer par le résultat du produit vectoriel
+        //return Vec3(); //A remplacer par le résultat du produit vectoriel
+        return Vec3(a[1]*b[2] - a[2]*b[1], -(a[0]*b[2] - a[2]*b[0]), a[0]*b[1] - a[1]*b[0]);
     }
     void operator += (Vec3 const & other) {
         mVals[0] += other[0];
@@ -118,7 +120,18 @@ public:
     {
         //Fonction à completer
         //Pour acceder a un element de la matrice (*this)(i,j) et du point p[i]
-        return Vec3(); //A remplacer par le résultat de la multiplication
+        //return Vec3(); //A remplacer par le résultat de la multiplication
+        Vec3 res = p;
+
+        for (int i = 0; i < 3; i++) {
+            res[i] = 0;
+
+            for (int j = 0; j < 3; j++) {
+                res[i] += (*this)(i, j) * p[i];
+            }
+        }
+
+        return res;
     }
 
     Mat3 operator * (const Mat3 & m2)
@@ -126,7 +139,17 @@ public:
         //Fonction à completer
         //Pour acceder a un element de la premiere matrice (*this)(i,j) et de la deuxième m2(k,l)
 
-        return Mat3(); //A remplacer par le résultat de la multiplication
+        //return Mat3(); //A remplacer par le résultat de la multiplication
+
+        Mat3 res;
+
+        for (int i = 0; i < 3; i++) {
+            for (int j = 0; j < 3; j++) {
+                res(i, j) = (*this)(i, j) * m2(i, j);
+            }
+        }
+
+        return res;
     }
 
     bool isnan() const {
